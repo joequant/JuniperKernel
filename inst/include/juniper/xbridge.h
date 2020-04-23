@@ -44,13 +44,12 @@ public:
 
 private:
   void configure_impl() override{throw("unimpl");}
-  inline xjson execute_request_impl(int,const std::string&,bool,bool,const xjson_node*,bool) override {throw("unimpl");}
+  inline xjson execute_request_impl(int,const std::string&,bool,bool,xjson,bool) override {throw("unimpl");}
   inline xjson complete_request_impl(const std::string&,int) override { throw("unimpl"); }
   inline xjson inspect_request_impl(const std::string&,int,int) override{throw("unimpl");}
-  inline xjson history_request_impl(const xhistory_arguments&) override{throw("unimpl");}
   inline xjson is_complete_request_impl(const std::string&) override{throw("unimpl");}
   inline xjson kernel_info_request_impl() override{throw("unimpl");}
-  inline void input_reply_impl(const std::string&) override{throw("unimpl");}
+  inline void shutdown_request_impl() override{throw("unimpl");}
 };
 
 extern xmock* _xm;
@@ -135,14 +134,14 @@ void xcomm_manager::comm_open(const xmessage& request) {
 
   auto position = pos(m_targets, target_name, "target");
   xtarget& target = position->second;
-  xguid id = content["comm_id"];
+  xguid id = xguid(content["comm_id"].dump());
   xcomm comm = xcomm(&target, id);
   target(std::move(comm), request);
 }
 
 void xcomm_manager::comm_close(const xmessage& request) { 
   const xjson& content = request.content();
-  xguid id = content["comm_id"];
+  xguid id = xguid(content["comm_id"].dump());
   auto position = pos(m_comms, id, "comm");
   position->second->handle_close(request);
   m_comms.erase(id);
@@ -150,10 +149,10 @@ void xcomm_manager::comm_close(const xmessage& request) {
 
 void xcomm_manager::comm_msg(const xmessage& request) {
   const xjson& content = request.content();
-  xguid id = content["comm_id"];
+  xguid id = xguid(content["comm_id"].dump());
   auto position = pos(m_comms, id, "comm");
   position->second->handle_message(request);
 }
 
-xguid xeus::new_xguid() { return JMessage::uniq_id(); }
+xguid xeus::new_xguid() { return xguid(JMessage::uniq_id()); }
 #endif // #ifndef juniper_juniper_xbridge_H
